@@ -22,22 +22,22 @@
 
           <v-list>
             <v-list-group
-              v-for="item in items"
+              v-for="item in types"
               :key="item.name"
             >
             
               <template v-slot:activator>
                 <v-list-item-content>
-                  <v-list-item-title v-text="item.name"></v-list-item-title>
+                  <v-list-item-title class="text-h5" v-text="item.name"></v-list-item-title>
                 </v-list-item-content>
               </template>
 
               <v-list-item
-                v-for="child in item.items"
+                v-for="child in item.pokemon.pokemon"
                 :key="child.pokemon.name"
               >
                 <v-list-item-content>
-                  <v-list-item-title v-text="child.pokemon.name"></v-list-item-title>
+                  <v-list-item-title class="text-center text-h6 indigo darken-1" v-text="child.pokemon.name"></v-list-item-title>
                 </v-list-item-content>
               </v-list-item>
             </v-list-group>
@@ -149,7 +149,7 @@ import axios from 'axios';
         ['Update', 'mdi-update'],
         ['Delete', 'mdi-delete']
               ],
-      items: [],
+      types: [],
       arbol: [
         {
           id: 1,
@@ -213,26 +213,17 @@ import axios from 'axios';
         },
       ],
     }),
-    mounted() {
-      axios.get('https://pokeapi.co/api/v2/type')
-      .then(data => {
-        this.items = data.data.results;
-        this.items.forEach(element => {
-          element.items = [];
-          axios.get(element.url)
-          .then(internalData => {
-            element.items = internalData.data.pokemon;
-            console.log(element.items)
-          })
-          .catch(error => {
-            console.log(error);
-          });
-        });
-        console.log(JSON.stringify(this.items, null, 2));
-      })
-      .catch(error => {
-        console.log(error);
-      });
-    },
+    async mounted() {
+      async function getProduct(types) {
+        types = (await axios.get('https://pokeapi.co/api/v2/type')).data.results;
+        for( let i = 0; i < types.length; i++){
+          const pokesByType = (await axios.get(types[i].url)).data;
+          types[i].pokemon = pokesByType;
+        }
+        return await types;
+      }
+      this.types = await getProduct();
+      await console.log(this.types);
+    }
   }
 </script>
